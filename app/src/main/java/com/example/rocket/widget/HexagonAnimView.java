@@ -21,17 +21,19 @@ import java.util.List;
  */
 public class HexagonAnimView extends View {
     private static final String TAG = "HexagonAnimView";
+    public static final int INNER_PADDING = 50;
     private static double S_R = Math.sqrt(3);//square_root 3
+
     private int mViewWidth;
     private int mViewHeight;
+
     private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint mPaintClearDraw = new Paint(Paint.ANTI_ALIAS_FLAG);
     private boolean mClearFlag;
     private boolean mReverseDrawFlag;
+    private boolean mRadioDrawFlag;
     private ArrayList<Path> mPathDraw = new ArrayList<Path>(6);
     private ArrayList<Path> mPathReverse = new ArrayList<Path>(6);
-
-
     private void createDrawPath() {
         for (int i = 0; i < 6; i++) {
             mPathDraw.add(new Path());
@@ -47,13 +49,15 @@ public class HexagonAnimView extends View {
         this(context, attrs, 0);
     }
 
+
+
     public HexagonAnimView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setLayerType(LAYER_TYPE_SOFTWARE, null);
-        mPaint.setStrokeWidth(3);
+        mPaint.setStrokeWidth(5);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setColor(Color.BLACK);
-        mPaintClearDraw.setStrokeWidth(5);
+        mPaintClearDraw.setStrokeWidth(7);
         mPaintClearDraw.setStyle(Paint.Style.STROKE);
         mPaintClearDraw.setColor(Color.TRANSPARENT);
         mPaintClearDraw.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
@@ -64,8 +68,8 @@ public class HexagonAnimView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mViewWidth = getMeasuredWidth();
-        mViewHeight = getMeasuredHeight();
+        mViewWidth = getMeasuredWidth()-4;
+        mViewHeight = getMeasuredHeight()-4;
 
     }
 
@@ -77,54 +81,41 @@ public class HexagonAnimView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.translate(mViewWidth / 2f, mViewHeight / 2f);
-        canvas.drawCircle(0, 0, 20, mPaint);
+        canvas.drawCircle(0, 0, 2, mPaint);
 
-        Log.i(TAG, "onDraw");
         if (mClearFlag) {
             clearContent(canvas);
             return;
         }
 
         for (int i = 0; i < mPathDraw.size(); i++) {
-            canvas.drawPath(mPathDraw.get(i), mPaint);
-            if (mReverseDrawFlag) {
+            if (mRadioDrawFlag) {//画放射效果
+                canvas.drawPath(mPathDraw.get(i), mPaint);
+            }
+            if (mReverseDrawFlag) {//画清空效果
                 canvas.drawPath(mPathReverse.get(i), mPaintClearDraw);
             }
-        }
-
-
-        if (mBorderAnimFlag) {
-
-
-            canvas.save();
-            for (int i = 0; i < 6; i++) {
+            if (mBorderAnimFlag) {//画边框效果
                 canvas.rotate(60);
-
                 float curLength = mPathLength * mPercent;
                 mPathDestLeft.reset();
                 boolean succLeft = mPathMeasureLeft.getSegment(0, curLength, mPathDestLeft, true);
-                Log.i(TAG, "画边框: succLeft"+succLeft );
                 if (succLeft) {
                     canvas.drawPath(mPathDestLeft, mPaint);
                 }
                 mPathDestRight.reset();
                 boolean succRight = mPathMeasureRight.getSegment(0, curLength, mPathDestRight, true);
-                Log.i(TAG, "画边框: succRight"+succRight );
                 if (succRight) {
                     canvas.drawPath(mPathDestRight, mPaint);
                 }
-
             }
-            canvas.restore();
+
         }
     }
 
 
     private float mPercent;
     private boolean mBorderAnimFlag;
-
-    private Path mBorderPathLeft;
-    private Path mBorderPathRight;
     private PathMeasure mPathMeasureLeft;
     private PathMeasure mPathMeasureRight;
     private Path mPathDestLeft = new Path();
@@ -132,17 +123,15 @@ public class HexagonAnimView extends View {
     private float mPathLength;
 
     private void startBorderAnim(int h) {
+        Path borderPathRight = new Path();
+        borderPathRight.moveTo(0, -h);
+        borderPathRight.lineTo((float) (S_R * h / 4.0), -3f / 4 * h);
+        Path borderPathLeft = new Path();
+        borderPathLeft.moveTo(0, -h);
+        borderPathLeft.lineTo((float) (-S_R * h / 4.0), -3f / 4 * h);
         mBorderAnimFlag = true;
-        mBorderPathRight = new Path();
-        mBorderPathRight.moveTo(0, -h);
-        mBorderPathRight.lineTo((float) (S_R * h / 4.0), -3f / 4 * h);
-
-        mBorderPathLeft = new Path();
-        mBorderPathLeft.moveTo(0, -h);
-        mBorderPathLeft.lineTo((float) (-S_R * h / 4.0), -3f / 4 * h);
-
-        mPathMeasureLeft = new PathMeasure(mBorderPathLeft, false);
-        mPathMeasureRight = new PathMeasure(mBorderPathRight, false);
+        mPathMeasureLeft = new PathMeasure(borderPathLeft, false);
+        mPathMeasureRight = new PathMeasure(borderPathRight, false);
         mPathLength = mPathMeasureLeft.getLength();
 
 
@@ -167,21 +156,36 @@ public class HexagonAnimView extends View {
     }
 
 
+    private boolean mOnceFlag;
+
     public void startAnim(final boolean isReverse) {
+        if (!isReverse) {
+            mRadioDrawFlag = true;
+        }
         mReverseDrawFlag = isReverse;
         ValueAnimator animator = ValueAnimator.ofInt(0, mViewHeight / 2);
         animator.setDuration(1000);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                if (animation.getAnimatedFraction() == 1.0F) {
+                float fraction = animation.getAnimatedFraction();
+                if (fraction == 1.0F) {
                     if (!isReverse) {
                         startAnim(true);
                     } else {
                         mReverseDrawFlag = false;
-                        startBorderAnim(mViewHeight / 2);
+                        mRadioDrawFlag = false;
                     }
                     return;
+                }
+                int percent = (int) (fraction * 100);
+                Log.i(TAG, "onAnimationUpdate: 进度：" + percent);
+                if (percent >= 50) {
+                    if (isReverse && !mOnceFlag) {
+                        Log.i(TAG, "onAnimationUpdate: 进度80% 开始边框动画");
+                        mOnceFlag = true;
+                        startBorderAnim(mViewHeight / 2);
+                    }
                 }
                 refreshDraw((int) animation.getAnimatedValue(), isReverse ? mPathReverse : mPathDraw);
             }
