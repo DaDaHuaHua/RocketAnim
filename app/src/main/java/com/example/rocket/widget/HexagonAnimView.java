@@ -1,5 +1,7 @@
 package com.example.rocket.widget;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -21,26 +23,18 @@ import java.util.List;
  */
 public class HexagonAnimView extends View {
     private static final String TAG = "HexagonAnimView";
-    public static final int INNER_PADDING = 50;
+    public static final int INNER_PADDING = 200;
     private static double S_R = Math.sqrt(3);//square_root 3
 
     private int mViewWidth;
     private int mViewHeight;
+    private int mInnerViewLength;
 
     private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint mPaintClearDraw = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private boolean mClearFlag;
-    private boolean mReverseDrawFlag;
-    private boolean mRadioDrawFlag;
-    private ArrayList<Path> mPathDraw = new ArrayList<Path>(6);
-    private ArrayList<Path> mPathReverse = new ArrayList<Path>(6);
-    private void createDrawPath() {
-        for (int i = 0; i < 6; i++) {
-            mPathDraw.add(new Path());
-            mPathReverse.add(new Path());
-        }
-    }
 
+
+    private AnimatorSet mScaleAnim ;
     public HexagonAnimView(Context context) {
         this(context, null);
     }
@@ -49,28 +43,31 @@ public class HexagonAnimView extends View {
         this(context, attrs, 0);
     }
 
-
-
     public HexagonAnimView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setLayerType(LAYER_TYPE_SOFTWARE, null);
         mPaint.setStrokeWidth(5);
         mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setColor(Color.BLACK);
+        mPaint.setColor(Color.WHITE);
         mPaintClearDraw.setStrokeWidth(7);
         mPaintClearDraw.setStyle(Paint.Style.STROKE);
         mPaintClearDraw.setColor(Color.TRANSPARENT);
         mPaintClearDraw.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         createDrawPath();
-    }
 
+
+        mHexagonPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mHexagonPaint.setColor(Color.parseColor("#ffffff"));
+        mHexagonPaint.setStrokeWidth(10);
+        mHexagonPaint.setStyle(Paint.Style.STROKE);
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mViewWidth = getMeasuredWidth()-4;
-        mViewHeight = getMeasuredHeight()-4;
-
+        mViewWidth = getMeasuredWidth();
+        mViewHeight = getMeasuredHeight();
+        mInnerViewLength = mViewHeight - INNER_PADDING;
     }
 
 
@@ -81,7 +78,7 @@ public class HexagonAnimView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.translate(mViewWidth / 2f, mViewHeight / 2f);
-        canvas.drawCircle(0, 0, 2, mPaint);
+
 
         if (mClearFlag) {
             clearContent(canvas);
@@ -109,10 +106,91 @@ public class HexagonAnimView extends View {
                     canvas.drawPath(mPathDestRight, mPaint);
                 }
             }
+        }
 
+
+        if(mHexagonDrawFlag){
+            Log.i(TAG, "画六边形" );
+            canvas.drawPath(mHexagonPath,mHexagonPaint);
         }
     }
 
+//------------------------  放射动画Start    -----------------------
+
+    private boolean mReverseDrawFlag;
+    private boolean mRadioDrawFlag;
+    private ArrayList<Path> mPathDraw = new ArrayList<Path>(6);
+    private ArrayList<Path> mPathReverse = new ArrayList<Path>(6);
+    private boolean mOnceFlag;
+
+    private void createDrawPath() {
+        for (int i = 0; i < 6; i++) {
+            mPathDraw.add(new Path());
+            mPathReverse.add(new Path());
+        }
+    }
+
+    public void startRadioAnim() {
+        startAnim(false);
+    }
+
+
+    private void startAnim(final boolean isReverse) {
+        if (!isReverse) {
+            mRadioDrawFlag = true;
+        }
+        mReverseDrawFlag = isReverse;
+        ValueAnimator animator = ValueAnimator.ofInt(0, mInnerViewLength / 2);
+        animator.setDuration(1000);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float fraction = animation.getAnimatedFraction();
+                if (fraction == 1.0F) {
+                    if (!isReverse) {
+                        startAnim(true);
+                    } else {
+                        mReverseDrawFlag = false;
+                        mRadioDrawFlag = false;
+                    }
+                    return;
+                }
+                int percent = (int) (fraction * 100);
+                Log.i(TAG, "onAnimationUpdate: 进度：" + percent);
+                if (percent >= 50) {
+                    if (isReverse && !mOnceFlag) {
+                        Log.i(TAG, "onAnimationUpdate:  开始边框动画");
+                        mOnceFlag = true;
+                        startBorderAnim(mInnerViewLength / 2);
+                    }
+                }
+                refreshDraw((int) animation.getAnimatedValue(), isReverse ? mPathReverse : mPathDraw);
+            }
+        });
+        animator.start();
+    }
+
+
+    private void refreshDraw(int value, List<Path> pathDraw) {
+        int bottomRightX = (int) (S_R / 2 * value);
+        int bottomRightY = value / 2;
+        //上
+        pathDraw.get(0).lineTo(0, -value);
+        //上右
+        pathDraw.get(1).lineTo(bottomRightX, -bottomRightY);
+        //下右
+        pathDraw.get(2).lineTo(bottomRightX, bottomRightY);
+        //下
+        pathDraw.get(3).lineTo(0, value);
+        //下左
+        pathDraw.get(4).lineTo(-bottomRightX, bottomRightY);
+        //上左
+        pathDraw.get(5).lineTo(-bottomRightX, -bottomRightY);
+        invalidate();
+    }
+
+//------------------------  放射动画End    -----------------------
+//------------------------ 边框动画start   -----------------------
 
     private float mPercent;
     private boolean mBorderAnimFlag;
@@ -142,79 +220,96 @@ public class HexagonAnimView extends View {
             public void onAnimationUpdate(ValueAnimator animation) {
                 mPercent = (float) animation.getAnimatedValue();
                 if (animation.getAnimatedFraction() == 1.0F) {
-
+                    postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            startHexagonScaleAnim();
+                        }
+                    },300);
                 }
                 invalidate();
             }
         });
         borderAnim.start();
     }
+//------------------------ 边框动画End   -----------------------
+//------------------------  缩放动画Start  -----------------------
 
+    private Path mHexagonPath = new Path();
+    private Paint mHexagonPaint;
+    private boolean mHexagonDrawFlag;
 
-    public void startRadioAnim() {
-        startAnim(false);
+    private void refreshHexagonPath(float length) {
+        mHexagonPath.reset();
+        mHexagonPath.moveTo(0, length);//下
+        mHexagonPath.lineTo((float) (S_R / 2f * length), length / 2f);//右下
+        mHexagonPath.lineTo((float) (S_R / 2f * length), -length / 2f);//右上
+        mHexagonPath.lineTo(0, -length);//上
+        mHexagonPath.lineTo((float) (-S_R / 2f * length), -length / 2f);//左上
+        mHexagonPath.lineTo((float) (-S_R / 2f * length), length / 2f);//左下
+        mHexagonPath.close();//回到下
     }
 
-
-    private boolean mOnceFlag;
-
-    public void startAnim(final boolean isReverse) {
-        if (!isReverse) {
-            mRadioDrawFlag = true;
-        }
-        mReverseDrawFlag = isReverse;
-        ValueAnimator animator = ValueAnimator.ofInt(0, mViewHeight / 2);
-        animator.setDuration(1000);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+    public void startHexagonScaleAnim() {
+        mHexagonPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mHexagonPaint.setColor(Color.parseColor("#88ffffff"));
+        mHexagonPaint.setStrokeWidth(3);
+        mHexagonPaint.setStyle(Paint.Style.STROKE);
+        int maxLength = mViewHeight - 4;
+        int minLength = mInnerViewLength - 4;
+        ValueAnimator valueAnimator = ValueAnimator.ofFloat(minLength,maxLength);
+        valueAnimator.setDuration(1000);
+        mHexagonDrawFlag = true;
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float fraction = animation.getAnimatedFraction();
-                if (fraction == 1.0F) {
-                    if (!isReverse) {
-                        startAnim(true);
-                    } else {
-                        mReverseDrawFlag = false;
-                        mRadioDrawFlag = false;
-                    }
-                    return;
+                Log.i(TAG, "onAnimationUpdate: 六边形动画：进度" + fraction +" ,value="+animation.getAnimatedValue());
+                if(fraction == 1.0F){
+                    startAllScale();
                 }
-                int percent = (int) (fraction * 100);
-                Log.i(TAG, "onAnimationUpdate: 进度：" + percent);
-                if (percent >= 50) {
-                    if (isReverse && !mOnceFlag) {
-                        Log.i(TAG, "onAnimationUpdate: 进度80% 开始边框动画");
-                        mOnceFlag = true;
-                        startBorderAnim(mViewHeight / 2);
-                    }
-                }
-                refreshDraw((int) animation.getAnimatedValue(), isReverse ? mPathReverse : mPathDraw);
+                refreshHexagonPath((float) animation.getAnimatedValue()/2f);
+                invalidate();
             }
         });
-        animator.start();
+        valueAnimator.start();
+    }
+    //------------------------  缩放动画End   -----------------------
+
+    //------------------------  整体缩放动画Start   -----------------------
+
+    private void startAllScale(){
+        ObjectAnimator scaleXAnim = ObjectAnimator.ofFloat(this,"scaleX",1.0f,0.9f);
+        ObjectAnimator scaleYAnim = ObjectAnimator.ofFloat(this,"scaleY",1.0f,0.9f);
+        mScaleAnim = new AnimatorSet();
+        mScaleAnim.playTogether(scaleXAnim,scaleYAnim);
+        mScaleAnim.setDuration(800);
+        scaleXAnim.setRepeatCount(-1);
+        scaleYAnim.setRepeatCount(-1);
+        scaleXAnim.setRepeatMode(ValueAnimator.REVERSE);
+        scaleYAnim.setRepeatMode(ValueAnimator.REVERSE);
+        mScaleAnim.start();
+        if(mListener!= null){
+            mListener.onLoadAnimComplete();
+        }
+    }
+//------------------------  整体缩放动画End   -----------------------
+//------------------------  暂停缩放动画效果Start   -----------------------
+
+    public void pauseScaleAnim(){
+        if(mScaleAnim != null && mScaleAnim.isRunning()){
+            mScaleAnim.pause();
+        }
     }
 
-
-
-
-
-    private void refreshDraw(int value, List<Path> pathDraw) {
-        int bottomRightX = (int) (S_R / 2 * value);
-        int bottomRightY = value / 2;
-        //上
-        pathDraw.get(0).lineTo(0, -value);
-        //上右
-        pathDraw.get(1).lineTo(bottomRightX, -bottomRightY);
-        //下右
-        pathDraw.get(2).lineTo(bottomRightX, bottomRightY);
-        //下
-        pathDraw.get(3).lineTo(0, value);
-        //下左
-        pathDraw.get(4).lineTo(-bottomRightX, bottomRightY);
-        //上左
-        pathDraw.get(5).lineTo(-bottomRightX, -bottomRightY);
-        invalidate();
+    public void resumeScaleAnim(){
+        if(mScaleAnim != null && mScaleAnim.isPaused()){
+            mScaleAnim.resume();
+        }
     }
-
+//------------------------  暂停缩放动画效果End   -----------------------
+//------------------------  清除动画效果Start   -----------------------
+    private boolean mClearFlag;
     public void clearView() {
         mClearFlag = true;
         invalidate();
@@ -225,7 +320,33 @@ public class HexagonAnimView extends View {
         canvas.drawPaint(mPaint);
         mPaint.setXfermode(mSrcXfermode);
         mClearFlag = false;
+        mHexagonDrawFlag =false;
+        mOnceFlag = false;
+        mBorderAnimFlag = false;
+        mRadioDrawFlag = false;
+        for (Path path : mPathReverse) {
+            path.reset();
+        }
+        for (Path path : mPathDraw) {
+            path.reset();
+        }
+        mPathDestRight.reset();
     }
+
+ //------------------------  清除动画效果End   -----------------------
+//------------------------  设置监听Start   -----------------------
+
+    public interface OnInnerHexagonAnimListener{
+        void onLoadAnimComplete();
+    }
+
+    private OnInnerHexagonAnimListener mListener;
+    public void setOnInnerHexagonAnimListener(OnInnerHexagonAnimListener listener){
+        this.mListener = listener;
+    }
+//------------------------  设置监听End   -----------------------
+
+
 
 
 }
