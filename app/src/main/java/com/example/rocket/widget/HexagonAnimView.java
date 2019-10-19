@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class HexagonAnimView extends View {
     private static final String TAG = "HexagonAnimView";
-    public static final int INNER_PADDING = 200;
+    public static final int INNER_PADDING = 100;
     private static double S_R = Math.sqrt(3);//square_root 3
 
     private int mViewWidth;
@@ -46,10 +46,10 @@ public class HexagonAnimView extends View {
     public HexagonAnimView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         setLayerType(LAYER_TYPE_SOFTWARE, null);
-        mPaint.setStrokeWidth(5);
+        mPaint.setStrokeWidth(4);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setColor(Color.WHITE);
-        mPaintClearDraw.setStrokeWidth(7);
+        mPaintClearDraw.setStrokeWidth(6);
         mPaintClearDraw.setStyle(Paint.Style.STROKE);
         mPaintClearDraw.setColor(Color.TRANSPARENT);
         mPaintClearDraw.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
@@ -78,7 +78,6 @@ public class HexagonAnimView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         canvas.translate(mViewWidth / 2f, mViewHeight / 2f);
-
 
         if (mClearFlag) {
             clearContent(canvas);
@@ -141,7 +140,7 @@ public class HexagonAnimView extends View {
         }
         mReverseDrawFlag = isReverse;
         ValueAnimator animator = ValueAnimator.ofInt(0, mInnerViewLength / 2);
-        animator.setDuration(1000);
+        animator.setDuration(500);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -163,6 +162,9 @@ public class HexagonAnimView extends View {
                         mOnceFlag = true;
                         startBorderAnim(mInnerViewLength / 2);
                     }
+                }
+                if(isReverse && mListener!= null){
+                    mListener.onRadioAnimUpdate(fraction);
                 }
                 refreshDraw((int) animation.getAnimatedValue(), isReverse ? mPathReverse : mPathDraw);
             }
@@ -214,7 +216,7 @@ public class HexagonAnimView extends View {
 
 
         ValueAnimator borderAnim = ValueAnimator.ofFloat(0, 1.0f);
-        borderAnim.setDuration(1000);
+        borderAnim.setDuration(700);
         borderAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -250,7 +252,7 @@ public class HexagonAnimView extends View {
         mHexagonPath.close();//回到下
     }
 
-    public void startHexagonScaleAnim() {
+    private void startHexagonScaleAnim() {
         mHexagonPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mHexagonPaint.setColor(Color.parseColor("#88ffffff"));
         mHexagonPaint.setStrokeWidth(3);
@@ -258,7 +260,7 @@ public class HexagonAnimView extends View {
         int maxLength = mViewHeight - 4;
         int minLength = mInnerViewLength - 4;
         ValueAnimator valueAnimator = ValueAnimator.ofFloat(minLength,maxLength);
-        valueAnimator.setDuration(1000);
+        valueAnimator.setDuration(500);
         mHexagonDrawFlag = true;
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
@@ -319,11 +321,15 @@ public class HexagonAnimView extends View {
         mPaint.setXfermode(mClearXfermode);
         canvas.drawPaint(mPaint);
         mPaint.setXfermode(mSrcXfermode);
+
         mClearFlag = false;
         mHexagonDrawFlag =false;
         mOnceFlag = false;
         mBorderAnimFlag = false;
         mRadioDrawFlag = false;
+        if(mScaleAnim!= null){
+            mScaleAnim.cancel();
+        }
         for (Path path : mPathReverse) {
             path.reset();
         }
@@ -336,7 +342,17 @@ public class HexagonAnimView extends View {
  //------------------------  清除动画效果End   -----------------------
 //------------------------  设置监听Start   -----------------------
 
-    public interface OnInnerHexagonAnimListener{
+    protected interface OnInnerHexagonAnimListener{
+
+        /**
+         *  放射状动画执行过程
+         * @param fraction 0.0~1.0
+         */
+        void onRadioAnimUpdate(float fraction);
+
+        /**
+         *  完全显示了面框回调
+         */
         void onLoadAnimComplete();
     }
 
