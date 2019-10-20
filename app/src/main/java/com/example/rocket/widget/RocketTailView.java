@@ -103,15 +103,15 @@ public class RocketTailView extends View {
         mAlphaPoints.clear();
         int startX = mViewWidth / 2;
         int startY = mViewHeight / 8;
-        int count = 30;
+        int count = 50;
         int xRange = mViewWidth / 3;
         for (int i = 0; i < 8; i++) {
             Part partTopCenter = new Part(mViewWidth,startX, startY, count, xRange / 2, RADIUS * 2);
             partTopCenter.addRandomPoint(mViewHeight-20,mAlphaPoints);
             startY += mViewHeight / 15;
             xRange += mViewWidth / 15  ;
-            if(i>=4){
-                count+=20;
+            if(i>=5){
+                count+=10;
             }
             count+=5;
         }
