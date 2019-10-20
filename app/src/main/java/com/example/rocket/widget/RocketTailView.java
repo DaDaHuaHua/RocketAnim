@@ -25,6 +25,7 @@ public class RocketTailView extends View {
     private int mViewHeight;
     public static final int RADIUS = 20;
     private LinkedList<Point> mAlphaPoints = new LinkedList<>();
+    private LinkedList<Point> mPointsDarker = new LinkedList<>();
     private LinkedList<Point> mPoints = new LinkedList<>();
     private Paint mPaint;
     private Paint mPaintTrans;
@@ -58,7 +59,8 @@ public class RocketTailView extends View {
 
 
     public void start() {
-        mAlphaPoints.clear();
+        mHandler.removeCallbacksAndMessages(null);
+       mAlphaPoints.clear();
        mHandler.sendEmptyMessage(MSG_REFRESH_TAIL_ANIM);
     }
 
@@ -88,6 +90,9 @@ public class RocketTailView extends View {
 
 
     public void createAndDraw(){
+        if(mViewHeight<=0 ||mViewWidth<=0){
+            return;
+        }
         createAlphaPoint();
         createPoint();
         invalidate();
@@ -98,13 +103,13 @@ public class RocketTailView extends View {
         mAlphaPoints.clear();
         int startX = mViewWidth / 2;
         int startY = mViewHeight / 8;
-        int count = 40;
-        int xRange = mViewWidth / 4;
-        for (int i = 0; i < 6; i++) {
-            Part partTopCenter = new Part(startX, startY, count, xRange / 2, RADIUS * 2);
-            partTopCenter.addRandomPoint(mAlphaPoints);
+        int count = 30;
+        int xRange = mViewWidth / 3;
+        for (int i = 0; i < 8; i++) {
+            Part partTopCenter = new Part(mViewWidth,startX, startY, count, xRange / 2, RADIUS * 2);
+            partTopCenter.addRandomPoint(mViewHeight-20,mAlphaPoints);
             startY += mViewHeight / 15;
-            xRange += mViewWidth / 10;
+            xRange += mViewWidth / 15  ;
             if(i>=4){
                 count+=20;
             }
@@ -120,13 +125,13 @@ public class RocketTailView extends View {
         int startY = mViewHeight / 10;
         int count = 20;
         int xRange = mViewWidth / 4;
-        for (int i = 0; i < 8; i++) {
-            Part partTopCenter = new Part(startX, startY, count, xRange / 2, RADIUS );
-            partTopCenter.addRandomPoint(mPoints);
+        for (int i = 0; i < 7; i++) {
+            Part partTopCenter = new Part(mViewWidth,startX, startY, count, xRange / 2, RADIUS );
+            partTopCenter.addRandomPoint(0,mPoints);
             startY += mViewHeight / 30;
             xRange += mViewWidth / 30;
-           if(i>3){
-               count-=3;
+           if(i>2){
+               count-=10;
            }else{
                count+= 3;
            }
@@ -155,20 +160,25 @@ public class RocketTailView extends View {
         private int mCount;
         private int mRangeX;
         private int mRangeY;
+        private int mViewWidth;
 
-        public Part(int x, int y, int count, int xRange, int yRange) {
+        public Part(int viewWidth ,int x, int y, int count, int xRange, int yRange) {
             this.mCenterPoint = new Point(x, y);
             this.mCount = count;
             this.mRangeX = xRange;
             this.mRangeY = yRange;
             mRandom = new Random();
+            mViewWidth= viewWidth;
         }
 
-        public void addRandomPoint(List<Point> list) {
+        public void addRandomPoint(int filterY ,List<Point> list) {
             for (int i = 0; i < mCount; i++) {
                 int x = mRandom.nextInt(mRangeX * 2) + mCenterPoint.x - mRangeX;
                 int y = mRandom.nextInt(mRangeY * 2) + mCenterPoint.y - mRangeY;
                 Point p = new Point(x, y);
+                if(filterY!= 0 && filterY>mCenterPoint.y-50 && filterY <mCenterPoint.y+50 && mCenterPoint.x < mViewWidth/2+50 &&  mCenterPoint.x < mViewWidth/-+50){
+                    return;
+                }
                 list.add(p);
             }
         }

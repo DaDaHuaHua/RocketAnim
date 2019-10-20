@@ -125,7 +125,7 @@ public class RocketAnimLayout extends RelativeLayout {
         float middleTargetTransition = ((mViewHeight / 2f + mRocketLayoutHeight / 4f));
         ObjectAnimator mToMiddleTrans = ObjectAnimator.ofFloat(mLayoutAnim, "translationY", mRocketLayoutHeight, -middleTargetTransition);
         mToMiddleTrans.setInterpolator(new AccelerateDecelerateInterpolator());
-        mToMiddleTrans.setDuration(800);
+        mToMiddleTrans.setDuration(1000);
 
         float keepTargetTransition = middleTargetTransition + mRocketLayoutHeight / 2f;
         ObjectAnimator mKeepAnimTrans = ObjectAnimator.ofFloat(mLayoutAnim, "translationY", -middleTargetTransition, -keepTargetTransition);
