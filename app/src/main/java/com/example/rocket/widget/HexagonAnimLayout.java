@@ -6,6 +6,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -83,19 +84,33 @@ public class HexagonAnimLayout extends RelativeLayout {
         mRotateAnim.start();
     }
 
+    private static final String TAG = "HexagonAnimLayout";
 
     /**
      *  设置转圈结束，显示六边形动画效果
      */
     public void setRotateEnd() {
-        mIvRotate.setVisibility(GONE);
-        if (mRotateAnim != null && mRotateAnim.isStarted()) {
-            mRotateAnim.cancel();
-            if(mListener!= null){
-                mListener.onRoundRotationComplete(mRepeatCount);
+        ValueAnimator alphaAnim = ValueAnimator.ofFloat(1.0f,0.0f);
+        alphaAnim.setDuration(200);
+        alphaAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Log.i(TAG, "onAnimationUpdate: 进度：" + animation.getAnimatedValue());
+                mIvRotate.setAlpha((float) animation.getAnimatedValue());
+                if((float) animation.getAnimatedValue() == 0.0F){
+                    mIvRotate.setAlpha(1.0f);
+                    mIvRotate.setVisibility(GONE);
+                    if (mRotateAnim != null && mRotateAnim.isStarted()) {
+                        mRotateAnim.cancel();
+                        if(mListener!= null){
+                            mListener.onRoundRotationComplete(mRepeatCount);
+                        }
+                    }
+                    mHexagonAnimView.startRadioAnim();
+                }
             }
-        }
-        mHexagonAnimView.startRadioAnim();
+        });
+        alphaAnim.start();
     }
 
     /**

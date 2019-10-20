@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AnimActivity"
+    tools:context=".AnimDemoActivity"
     android:background="#FA8072">
 
 
@@ -58,6 +58,18 @@
         android:text="最终体效果"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/start_tv"/>
+
+    <TextView
+        android:id="@+id/rocket_tv"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:background="#456789"
+        android:textColor="#ffffff"
+        android:textSize="13sp"
+        android:gravity="center"
+        android:text="火箭动画"
+        app:layout_constraintLeft_toLeftOf="@id/clear_tv"
+        app:layout_constraintTop_toBottomOf="@id/clear_tv"/>
 
     <com.example.rocket.widget.HexagonAnimView
         android:id="@+id/hexagon_anim_view"

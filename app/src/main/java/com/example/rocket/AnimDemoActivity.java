@@ -2,7 +2,7 @@ package com.example.rocket;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.example.rocket.widget.HexagonAnimLayout;
 import com.example.rocket.widget.HexagonAnimView;
 
-public class AnimActivity extends AppCompatActivity implements View.OnClickListener {
+public class AnimDemoActivity extends AppCompatActivity implements View.OnClickListener {
 
 
     private HexagonAnimView mHexagonAnimView;
@@ -25,6 +25,7 @@ public class AnimActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.clear_tv).setOnClickListener(this);
         findViewById(R.id.pause_tv).setOnClickListener(this);
         findViewById(R.id.all_tv).setOnClickListener(this);
+        findViewById(R.id.rocket_tv).setOnClickListener(this);
     }
 
 
@@ -56,6 +57,9 @@ public class AnimActivity extends AppCompatActivity implements View.OnClickListe
                 showView(mHexagonAnimLayout);
                 startWholeAnim();
                 break;
+            case R.id.rocket_tv:
+                startActivity(new Intent(this, RoctetDemoActivity.class));
+                break;
         }
     }
 
@@ -72,6 +76,6 @@ public class AnimActivity extends AppCompatActivity implements View.OnClickListe
             public void run() {
                 mHexagonAnimLayout.setRotateEnd();
             }
-        },3000);
+        },2000);
     }
 }

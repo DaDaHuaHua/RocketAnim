@@ -15,7 +15,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.tv_show_anim).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this,AnimActivity.class));
+                startActivity(new Intent(MainActivity.this, AnimDemoActivity.class));
             }
         });
     }
