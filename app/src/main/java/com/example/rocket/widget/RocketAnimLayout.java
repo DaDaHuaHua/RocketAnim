@@ -54,6 +54,9 @@ public class RocketAnimLayout extends RelativeLayout {
      * @param loadingDuration  设置loading时间
      */
     public void startAnim(int loadingDuration) {
+        if (mRocketTailView != null) {
+            mRocketTailView.purge();
+        }
         this.mLoadingDuration = loadingDuration;
         mLayoutAnim.setVisibility(VISIBLE);
         startTransAnim();

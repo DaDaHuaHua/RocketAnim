@@ -68,7 +68,7 @@ public class RocketTailView extends View {
 
 
     public static final int MSG_REFRESH_TAIL_ANIM = 0X01;
-    public static final int TAIL_REFRESH_INTERVAL = 200;
+    public static final int TAIL_REFRESH_INTERVAL = 100;
 
 
 

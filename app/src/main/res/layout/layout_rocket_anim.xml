@@ -6,7 +6,6 @@
 
     <RelativeLayout
         android:id="@+id/layout_anim"
-        android:background="#D81B60"
         android:layout_width="200dp"
         android:layout_height="520dp"
         android:layout_centerHorizontal="true"
