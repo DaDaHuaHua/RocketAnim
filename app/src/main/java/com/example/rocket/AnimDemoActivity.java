@@ -9,19 +9,23 @@ import android.widget.TextView;
 
 import com.example.rocket.widget.HexagonAnimLayout;
 import com.example.rocket.widget.HexagonAnimView;
+import com.example.rocket.widget.ParticleView;
 
 public class AnimDemoActivity extends AppCompatActivity implements View.OnClickListener {
 
 
     private HexagonAnimView mHexagonAnimView;
     private HexagonAnimLayout mHexagonAnimLayout;
+    ParticleView mParticleView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_anim);
         mHexagonAnimView = findViewById(R.id.hexagon_anim_view);
         mHexagonAnimLayout = findViewById(R.id.hexagon_anim_layout);
-        findViewById(R.id.start_tv).setOnClickListener(this);
+        mParticleView = findViewById(R.id.particle_view);
+        findViewById(R.id.particle_in).setOnClickListener(this);
+        findViewById(R.id.particle_out).setOnClickListener(this);
         findViewById(R.id.clear_tv).setOnClickListener(this);
         findViewById(R.id.pause_tv).setOnClickListener(this);
         findViewById(R.id.all_tv).setOnClickListener(this);
@@ -34,9 +38,11 @@ public class AnimDemoActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.start_tv:
-                showView(mHexagonAnimView);
-                mHexagonAnimView.startRadioAnim();
+            case R.id.particle_in:
+                mParticleView.startBackCenterAnim(true);
+                break;
+            case R.id.particle_out:
+                mParticleView.startBackCenterAnim(false);
                 break;
             case R.id.clear_tv:
                 showView(mHexagonAnimView);
@@ -70,6 +76,21 @@ public class AnimDemoActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void startWholeAnim() {
+        mHexagonAnimLayout.setAnimListener(new HexagonAnimLayout.AnimListenerSimple(){
+            @Override
+            public void onRotationStart() {
+                if(mParticleView!= null){
+                    mParticleView.startBackCenterAnim(false);
+                }
+            }
+
+            @Override
+            public void onRotationEnd() {
+                if(mParticleView!=null){
+                    mParticleView.startBackCenterAnim(true);
+                }
+            }
+        });
         mHexagonAnimLayout.setRotateStart();
         mHexagonAnimLayout.postDelayed(new Runnable() {
             @Override
@@ -77,5 +98,6 @@ public class AnimDemoActivity extends AppCompatActivity implements View.OnClickL
                 mHexagonAnimLayout.setRotateEnd();
             }
         },2000);
+
     }
 }

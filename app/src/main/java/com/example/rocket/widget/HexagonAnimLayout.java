@@ -54,6 +54,9 @@ public class HexagonAnimLayout extends RelativeLayout {
         if(mHexagonAnimView != null){
             mHexagonAnimView.clearView();
         }
+        if(mListener!= null){
+            mListener.onRotationStart();
+        }
         mIvRotate.setVisibility(VISIBLE);
         if (mRotateAnim != null && mRotateAnim.isStarted()) {
             mRotateAnim.cancel();
@@ -92,6 +95,9 @@ public class HexagonAnimLayout extends RelativeLayout {
     public void setRotateEnd() {
         ValueAnimator alphaAnim = ValueAnimator.ofFloat(1.0f,0.0f);
         alphaAnim.setDuration(200);
+        if(mListener!= null){
+            mListener.onRotationEnd();
+        }
         alphaAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -141,11 +147,17 @@ public class HexagonAnimLayout extends RelativeLayout {
     //-------------- listener ----------------
     public interface AnimListener extends HexagonAnimView.OnInnerHexagonAnimListener {
 
+
+        void onRotationStart();
+
+        void onRotationEnd();
+
         /**
          *  旋转动画执行中的回调
          * @param aRoundFraction 会回调多次 0.0~1.0的进度
          */
         void onRotationRunning(float aRoundFraction);
+
 
         /**
          * 旋转中的回调
@@ -162,6 +174,16 @@ public class HexagonAnimLayout extends RelativeLayout {
 
 
     public static class AnimListenerSimple implements AnimListener{
+
+        @Override
+        public void onRotationStart() {
+
+        }
+
+        @Override
+        public void onRotationEnd() {
+
+        }
 
         @Override
         public void onRotationRunning(float aRoundFraction) {
